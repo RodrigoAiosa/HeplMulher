@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# CSS PARA DESIGN NEON E FONTES 26px
+# CSS PARA DESIGN NEON (CÍRCULOS GRANDES) E FONTES 26px
 st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
@@ -37,7 +37,7 @@ st.markdown("""
         line-height: 1.4;
     }
 
-    /* ESTILIZAÇÃO DOS BOTÕES RÁDIO NEON */
+    /* ESTILIZAÇÃO DOS BOTÕES RÁDIO NEON - IGUAL À IMAGEM */
     div.row-widget.stRadio > div {
         flex-direction: row !important; 
         justify-content: center !important; 
@@ -87,35 +87,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Título e Introdução
+# Título Principal
 st.markdown("<h1>Análise de Risco Comportamental</h1>", unsafe_allow_html=True)
 
+# Texto Introdutório Justificando as Perguntas
 st.markdown("""
 <div class="intro-text">
     <b>Por que estas perguntas são vitais?</b><br>
     Este protocolo foi estruturado com base em estudos de <b>Psicologia Forense</b> e <b>Coerção Coercitiva</b>. 
     As perguntas identificam "preditores de alta letalidade". A ciência demonstra que o controle invisível 
     e o isolamento social antecedem a violência física grave. Responder a este questionário ajuda a 
-    identificar o risco em estágios precoces.
+    identificar o risco em estágios precoces antes que a integridade física seja comprometida.
 </div>
 """, unsafe_allow_html=True)
 
+# Embasamento Científico no Topo
 with st.expander("🔬 Ver Embasamento Científico e Referências"):
     st.markdown("""
     <div style="font-size:16px; color:#bbb;">
-    1. <b>Modelo de Duluth:</b> Roda de poder e controle.<br>
-    2. <b>Escala de Charlot (2025):</b> Sinais precoces de parceiros violentos.<br>
-    3. <b>Danger Assessment:</b> Predição de risco de feminicídio.<br><br>
+    1. <b>Modelo de Duluth:</b> Baseado na roda de poder e controle em relacionamentos abusivos.<br>
+    2. <b>Escala de Charlot (2025):</b> Focada na validade preditiva de sinais de alerta precoces.<br>
+    3. <b>Danger Assessment (Campbell, 2003):</b> Ferramenta científica para avaliar risco de feminicídio.<br><br>
     <b>Referências:</b><br>
-    • Charlot, A. et al. (2025). <i>The Predictive Validity of IPV Warning Signs.</i><br>
-    • Dutton, D. G. (2006). <i>The Abusive Personality.</i><br>
+    • Charlot, A. et al. (2025). <i>The Predictive Validity of Intimate Partner Violence Warning Signs.</i><br>
+    • Dutton, D. G. (2006). <i>The Abusive Personality: Violence and Control.</i><br>
     • Pence, E. (1993). <i>The Duluth Model.</i>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown("<hr style='border-color:#333'>", unsafe_allow_html=True)
 
-# Lógica das Perguntas
+# Configuração de Respostas
 opcoes = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
@@ -123,8 +125,8 @@ perguntas = [
     "Ele desqualifica sua percepção da realidade (faz você duvidar da sua memória)?",
     "Ele demonstra ciúme excessivo e justifica isso como 'excesso de amor'?",
     "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?",
-    "Ele isola você de sua rede de apoio (família/amigos) criticando-os?",
-    "Há um ciclo de 'explosão de raiva' seguido por 'pedidos de desculpas'?",
+    "Ele isola você de sua rede de apoio (família/amigos) criticando-os constantemente?",
+    "Há um ciclo de 'explosão de raiva' seguido por 'pedidos de desculpas intensos'?",
     "Ele pressiona ou obriga você a ter relações sexuais quando você não quer?",
     "Ele sabota seus métodos contraceptivos ou pressiona por uma gravidez?",
     "Ele costuma culpar você pelas reações agressivas dele?"
@@ -133,29 +135,39 @@ perguntas = [
 respostas = []
 for i, p in enumerate(perguntas, 1):
     st.markdown(f'<div class="pergunta">{i}. {p}</div>', unsafe_allow_html=True)
-    escolha = st.radio(label=f"q{i}", options=[1, 2, 3, 4], index=None, horizontal=True, key=f"q{i}", format_func=lambda x: opcoes[x], label_visibility="collapsed")
+    escolha = st.radio(
+        label=f"q{i}", 
+        options=[1, 2, 3, 4], 
+        index=None, 
+        horizontal=True, 
+        key=f"q{i}", 
+        format_func=lambda x: opcoes[x], 
+        label_visibility="collapsed"
+    )
     if escolha:
         respostas.append(escolha)
 
-# Resultados e Salvamento de Dados
+# Resultados e Registro de Dados
 if len(respostas) == len(perguntas):
     pontuacao_total = sum(respostas)
     data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # Salvar no arquivo .txt preservando dados existentes [cite: 2026-01-18]
+    # Salva mantendo os dados anteriores [cite: 2026-01-18]
     with open("dados_analise.txt", "a", encoding="utf-8") as f:
         f.write(f"Data: {data_hora} | Pontos: {pontuacao_total} | Respostas: {respostas}\n")
     
     st.markdown("<div class='resultado-box'>", unsafe_allow_html=True)
     if pontuacao_total <= 18:
-        nivel, cor = "BAIXO RISCO", "#4caf50"
+        nivel, cor, desc = "BAIXO RISCO", "#4caf50", "Mantenha sua autonomia preservada."
     elif pontuacao_total <= 28:
-        nivel, cor = "RISCO MODERADO", "#ffeb3b"
+        nivel, cor, desc = "RISCO MODERADO", "#ffeb3b", "Procure apoio e fortaleça seus limites."
     else:
-        nivel, cor = "ALTO RISCO", "#f44336"
+        nivel, cor, desc = "ALTO RISCO", "#f44336", "Procure ajuda profissional imediatamente."
 
     st.markdown(f"<h2 style='color:{cor}'>{nivel}</h2>", unsafe_allow_html=True)
     st.markdown(f"<div class='pontuacao-num'>{pontuacao_total}/40</div>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:20px;'>{desc}</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("<br><br><div style='text-align:center; color:#888; font-size:16px;'>📞 Ajuda Imediata? <b>Disque 180</b></div>", unsafe_allow_html=True)app.py
+# Rodapé
+st.markdown("<br><br><br><div style='text-align:center; color:#888; font-size:16px;'>📞 Ajuda Imediata? <b>Disque 180</b></div>", unsafe_allow_html=True)
