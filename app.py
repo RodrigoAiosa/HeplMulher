@@ -25,10 +25,8 @@ def salvar_na_planilha(dados_finais):
         url = "https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0"
         sheet = client.open_by_url(url).sheet1
 
-        # Descobre a próxima linha disponível
         ultima_linha = len(sheet.get_all_values()) + 1
 
-        # Atualiza sempre começando da coluna A
         sheet.update(
             f"A{ultima_linha}:E{ultima_linha + len(dados_finais) - 1}",
             dados_finais
@@ -47,7 +45,7 @@ st.markdown("""
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
     .pergunta {
-        text-align: left;  /* PERGUNTAS ALINHADAS À ESQUERDA */
+        text-align: left;
         font-size: 26px !important;
         margin: 50px 0 30px;
         color: #ffffff;
@@ -60,6 +58,21 @@ st.markdown(
     "<h1 style='text-align:center; color:#bb86fc;'>Análise de Risco Comportamental</h1>",
     unsafe_allow_html=True
 )
+
+# --- BLOCO DE REFERÊNCIAS ---
+with st.container():
+    st.info("""
+**Referências do questionário**
+
+Este questionário foi inspirado em estudos sobre violência psicológica, controle coercitivo e relacionamentos abusivos.
+
+Principais referências:
+- Organização Mundial da Saúde (WHO) — Violence Against Women Studies
+- CDC — Intimate Partner Violence Research
+- UN Women — Relatórios globais sobre violência doméstica
+- Instituto Maria da Penha — Materiais educativos
+- Bancroft, L. — *Why Does He Do That? Inside the Minds of Angry and Controlling Men*
+""")
 
 # ID único de acesso
 if 'id_acesso' not in st.session_state:
@@ -103,11 +116,9 @@ for i, p in enumerate(perguntas, 1):
             "valor": escolha
         })
 
-# Finalização
 if len(respostas_coletadas) == len(perguntas):
     if st.button("FINALIZAR E SALVAR"):
         total = sum([r['valor'] for r in respostas_coletadas])
-
         nivel = "ALTO" if total > 28 else ("MODERADO" if total > 18 else "BAIXO")
 
         agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
