@@ -3,14 +3,13 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-# CONFIGURAÇÃO
 st.set_page_config(
     page_title="Detector de Riscos",
     page_icon="⚠️",
     layout="centered"
 )
 
-# --- GOOGLE SHEETS ---
+# GOOGLE SHEETS
 def salvar_na_planilha(dados_finais):
     try:
         scope = [
@@ -39,35 +38,23 @@ def salvar_na_planilha(dados_finais):
         return False
 
 
-# --- CSS ---
+# CSS QUE ESTILIZA O CONTAINER REAL DO STREAMLIT
 st.markdown("""
 <style>
 .stApp {
     background-color: #0e001a;
 }
 
-/* Estilo aplicado diretamente ao container */
-div[data-testid="stVerticalBlock"] > div {
-    border-radius: 25px;
-}
-
-.bloco-pergunta {
+div[data-testid="stContainer"] {
     background: linear-gradient(145deg, #1a0033, #2a004d);
     padding: 30px;
     border-radius: 25px;
-    margin-bottom: 40px;
+    margin-bottom: 35px;
     border: 2px solid #7b2cff;
     box-shadow:
         0 0 20px rgba(123,44,255,0.7),
         0 0 35px rgba(123,44,255,0.4),
         inset 0 0 12px rgba(123,44,255,0.3);
-}
-
-.pergunta {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 15px;
-    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -77,7 +64,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ID único
 if 'id_acesso' not in st.session_state:
     st.session_state['id_acesso'] = datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -99,17 +85,8 @@ perguntas = [
 respostas_coletadas = []
 
 for i, p in enumerate(perguntas, 1):
-
-    # CONTAINER REAL
-    container = st.container()
-
-    with container:
-        st.markdown('<div class="bloco-pergunta">', unsafe_allow_html=True)
-
-        st.markdown(
-            f'<div class="pergunta">{i}. {p}</div>',
-            unsafe_allow_html=True
-        )
+    with st.container():
+        st.markdown(f"**{i}. {p}**")
 
         escolha = st.radio(
             label=f"q{i}",
@@ -120,8 +97,6 @@ for i, p in enumerate(perguntas, 1):
             format_func=lambda x: opcoes[x],
             label_visibility="collapsed"
         )
-
-        st.markdown('</div>', unsafe_allow_html=True)
 
     if escolha:
         respostas_coletadas.append({
@@ -156,7 +131,4 @@ if len(respostas_coletadas) == len(perguntas):
                 unsafe_allow_html=True
             )
 
-st.markdown(
-    "<br><p style='text-align:center; color:#888;'>📞 Disque 180</p>",
-    unsafe_allow_html=True
-)
+st.markdown("<br><p style='text-align:center; color:#888;'>📞 Disque 180</p>", unsafe_allow_html=True)
