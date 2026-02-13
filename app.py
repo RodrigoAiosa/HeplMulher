@@ -25,10 +25,8 @@ def salvar_na_planilha(dados_finais):
         url = "https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0"
         sheet = client.open_by_url(url).sheet1
 
-        # Descobre a próxima linha disponível
         ultima_linha = len(sheet.get_all_values()) + 1
 
-        # Atualiza sempre começando da coluna A
         sheet.update(
             f"A{ultima_linha}:E{ultima_linha + len(dados_finais) - 1}",
             dados_finais
@@ -46,12 +44,21 @@ st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
+
     .pergunta {
         text-align: center;
         font-size: 26px !important;
-        margin: 50px 0 30px;
+        margin: 10px 0 20px;
         color: #ffffff;
         font-weight: 700;
+    }
+
+    .card-pergunta {
+        background-color:#1a0033;
+        padding:25px;
+        border-radius:15px;
+        margin-bottom:25px;
+        box-shadow: 0 0 15px rgba(183,132,247,0.4);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -84,17 +91,26 @@ perguntas = [
 respostas_coletadas = []
 
 for i, p in enumerate(perguntas, 1):
-    st.markdown(f'<div class="pergunta">{i}. {p}</div>', unsafe_allow_html=True)
 
-    escolha = st.radio(
-        label=f"q{i}",
-        options=[1, 2, 3, 4],
-        index=None,
-        horizontal=True,
-        key=f"q{i}",
-        format_func=lambda x: opcoes[x],
-        label_visibility="collapsed"
-    )
+    with st.container():
+        st.markdown('<div class="card-pergunta">', unsafe_allow_html=True)
+
+        st.markdown(
+            f'<div class="pergunta">{i}. {p}</div>',
+            unsafe_allow_html=True
+        )
+
+        escolha = st.radio(
+            label=f"q{i}",
+            options=[1, 2, 3, 4],
+            index=None,
+            horizontal=True,
+            key=f"q{i}",
+            format_func=lambda x: opcoes[x],
+            label_visibility="collapsed"
+        )
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
     if escolha:
         respostas_coletadas.append({
@@ -116,11 +132,11 @@ if len(respostas_coletadas) == len(perguntas):
         linhas_para_planilha = []
         for r in respostas_coletadas:
             linhas_para_planilha.append([
-                agora,          # Coluna A
-                id_ac,          # Coluna B
-                r['pergunta'],  # Coluna C
-                r['resposta'],  # Coluna D
-                nivel           # Coluna E
+                agora,
+                id_ac,
+                r['pergunta'],
+                r['resposta'],
+                nivel
             ])
 
         if salvar_na_planilha(linhas_para_planilha):
