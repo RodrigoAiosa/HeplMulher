@@ -1,10 +1,35 @@
 import streamlit as st
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
 # ---------------- CONFIGURAÇÃO DA PÁGINA ----------------
 st.set_page_config(
     page_title="Análise de Risco Comportamental",
     layout="wide"
 )
+
+# ---------------- GOOGLE SHEETS ----------------
+def salvar_no_google_sheets(respostas):
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = ServiceAccountCredentials.from_json_keyfile_name(
+        "credenciais.json", scope
+    )
+
+    client = gspread.authorize(creds)
+    planilha = client.open("AnaliseComportamental")
+    aba = planilha.sheet1
+
+    linha = [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+
+    for i in range(1, 11):
+        linha.append(respostas.get(i, ""))
+
+    aba.append_row(linha)
 
 # ---------------- CSS GLOBAL ----------------
 st.markdown("""
@@ -18,7 +43,8 @@ body {
     margin: auto;
 }
 
-.card {
+/* FLIP CARD (SEM ANIMAÇÃO) */
+.flip-card {
     background: #140028;
     padding: 28px;
     border-radius: 20px;
@@ -56,26 +82,26 @@ Responda às perguntas abaixo para avaliar padrões de comportamento.
 
 st.markdown('<div class="divisor"></div>', unsafe_allow_html=True)
 
-# ---------------- PERGUNTAS ----------------
-
+# ---------------- PERGUNTAS ORIGINAIS ----------------
 perguntas = [
-    "Ele demonstra um senso de posse sobre suas decisões?",
-    "Ele tenta controlar o que você veste ou para onde vai?",
-    "Ele verifica seu celular ou redes sociais?",
-    "Ele fica irritado quando você sai sem ele?",
-    "Ele tenta afastar você de amigos ou família?",
-    "Ele faz você se sentir culpado(a) frequentemente?",
-    "Ele muda de humor de forma imprevisível?",
-    "Ele desvaloriza suas opiniões?",
-    "Ele exige saber onde você está o tempo todo?",
-    "Ele reage mal quando contrariado?"
+    "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
+    "Ele tenta controlar o que você veste, com quem fala ou para onde vai?",
+    "Ele desqualifica sua percepção da realidade (faz você duvidar da sua memória)?",
+    "Ele demonstra ciúme excessivo e justifica isso como 'excesso de amor'?",
+    "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?",
+    "Ele isola você de sua rede de apoio (família/amigos)?",
+    "Há um ciclo de explosão de raiva seguido por pedidos de desculpas?",
+    "Ele pressiona você a ter relações quando você não quer?",
+    "Ele sabota métodos contraceptivos ou pressiona por gravidez?",
+    "Ele costuma culpar você pelas reações agressivas dele?"
 ]
 
 respostas = {}
 
+# ---------------- FORMULÁRIO ----------------
 for i, pergunta in enumerate(perguntas, start=1):
     st.markdown('<div class="section">', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="flip-card">', unsafe_allow_html=True)
 
     st.markdown(f"### {i}. {pergunta}")
     respostas[i] = st.radio(
@@ -92,5 +118,5 @@ for i, pergunta in enumerate(perguntas, start=1):
 st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("Finalizar avaliação"):
-    st.success("Respostas registradas.")
-    st.write(respostas)
+    salvar_no_google_sheets(respostas)
+    st.success("Respostas salvas no Google Sheets.")
