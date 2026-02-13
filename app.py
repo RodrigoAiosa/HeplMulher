@@ -1,6 +1,6 @@
 import streamlit as st
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 # ---------------- CONFIGURAÇÃO DA PÁGINA ----------------
@@ -12,12 +12,13 @@ st.set_page_config(
 # ---------------- GOOGLE SHEETS ----------------
 def salvar_no_google_sheets(respostas):
     scope = [
-        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        "credenciais.json", scope
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=scope
     )
 
     client = gspread.authorize(creds)
@@ -43,7 +44,6 @@ body {
     margin: auto;
 }
 
-/* FLIP CARD (SEM ANIMAÇÃO) */
 .flip-card {
     background: #140028;
     padding: 28px;
@@ -82,23 +82,22 @@ Responda às perguntas abaixo para avaliar padrões de comportamento.
 
 st.markdown('<div class="divisor"></div>', unsafe_allow_html=True)
 
-# ---------------- PERGUNTAS ORIGINAIS ----------------
+# ---------------- PERGUNTAS ----------------
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
     "Ele tenta controlar o que você veste, com quem fala ou para onde vai?",
-    "Ele desqualifica sua percepção da realidade (faz você duvidar da sua memória)?",
-    "Ele demonstra ciúme excessivo e justifica isso como 'excesso de amor'?",
-    "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?",
-    "Ele isola você de sua rede de apoio (família/amigos)?",
-    "Há um ciclo de explosão de raiva seguido por pedidos de desculpas?",
-    "Ele pressiona você a ter relações quando você não quer?",
-    "Ele sabota métodos contraceptivos ou pressiona por gravidez?",
-    "Ele costuma culpar você pelas reações agressivas dele?"
+    "Ele desqualifica sua percepção da realidade?",
+    "Ele demonstra ciúme excessivo?",
+    "Ele monitora suas redes sociais?",
+    "Ele isola você de amigos ou família?",
+    "Há explosões de raiva seguidas de desculpas?",
+    "Ele pressiona você a ter relações?",
+    "Ele pressiona por gravidez?",
+    "Ele culpa você pelas reações dele?"
 ]
 
 respostas = {}
 
-# ---------------- FORMULÁRIO ----------------
 for i, pergunta in enumerate(perguntas, start=1):
     st.markdown('<div class="section">', unsafe_allow_html=True)
     st.markdown('<div class="flip-card">', unsafe_allow_html=True)
