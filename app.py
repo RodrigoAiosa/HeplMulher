@@ -44,6 +44,7 @@ st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
+
     .pergunta {
         text-align: left;
         font-size: 26px !important;
@@ -51,6 +52,31 @@ st.markdown("""
         color: #ffffff;
         font-weight: 700;
     }
+
+    .resultado {
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        margin-top: 30px;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .baixo {
+        background-color: #1b5e20;
+        color: #00ff88;
+    }
+
+    .moderado {
+        background-color: #665c00;
+        color: #ffd600;
+    }
+
+    .alto {
+        background-color: #5e0000;
+        color: #ff4d4d;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -60,21 +86,12 @@ st.markdown(
 )
 
 # --- BLOCO DE REFERÊNCIAS ---
-with st.container():
-    st.info("""
-**Referências do questionário**
-
-Este questionário foi inspirado em estudos sobre violência psicológica, controle coercitivo e relacionamentos abusivos.
-
-Principais referências:
-- Organização Mundial da Saúde (WHO) — Violence Against Women Studies
-- CDC — Intimate Partner Violence Research
-- UN Women — Relatórios globais sobre violência doméstica
-- Instituto Maria da Penha — Materiais educativos
-- Bancroft, L. — *Why Does He Do That? Inside the Minds of Angry and Controlling Men*
+st.info("""
+Este questionário foi inspirado em estudos da OMS, CDC, UN Women,
+Instituto Maria da Penha e na obra "Why Does He Do That?" de Lundy Bancroft.
 """)
 
-# ID único de acesso
+# ID único
 if 'id_acesso' not in st.session_state:
     st.session_state['id_acesso'] = datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -116,10 +133,20 @@ for i, p in enumerate(perguntas, 1):
             "valor": escolha
         })
 
+# Finalização
 if len(respostas_coletadas) == len(perguntas):
     if st.button("FINALIZAR E SALVAR"):
         total = sum([r['valor'] for r in respostas_coletadas])
-        nivel = "ALTO" if total > 28 else ("MODERADO" if total > 18 else "BAIXO")
+
+        if total > 28:
+            nivel = "ALTO"
+            classe_css = "alto"
+        elif total > 18:
+            nivel = "MODERADO"
+            classe_css = "moderado"
+        else:
+            nivel = "BAIXO"
+            classe_css = "baixo"
 
         agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         id_ac = st.session_state['id_acesso']
@@ -136,8 +163,9 @@ if len(respostas_coletadas) == len(perguntas):
 
         if salvar_na_planilha(linhas_para_planilha):
             st.success("Análise salva com sucesso!")
+
             st.markdown(
-                f"<h2 style='text-align:center;'>Resultado: {nivel}</h2>",
+                f'<div class="resultado {classe_css}">Resultado: {nivel}</div>',
                 unsafe_allow_html=True
             )
 
