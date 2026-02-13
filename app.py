@@ -1,142 +1,97 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import os
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Configuração da Página
-st.set_page_config(
-    page_title="Detector de Riscos: Perfil de Agressor",
-    page_icon="⚠️",
-    layout="centered"
-)
+st.set_page_config(page_title="Detector de Riscos", page_icon="⚠️", layout="centered")
 
-# --- FUNÇÕES DE SALVAMENTO (LOCAL .TXT) ---
-# [cite: 2026-02-13] Sempre gera arquivos .py e .txt completos
-# [cite: 2026-01-18] Preservar dados existentes
+# --- CONEXÃO COM GOOGLE SHEETS ---
+def salvar_na_planilha(linha):
+    try:
+        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        
+        # Carrega credenciais formatadas do Streamlit Secrets
+        creds_dict = {
+            "type": st.secrets["gcp_service_account"]["type"],
+            "project_id": st.secrets["gcp_service_account"]["project_id"],
+            "private_key_id": st.secrets["gcp_service_account"]["private_key_id"],
+            "private_key": st.secrets["gcp_service_account"]["private_key"],
+            "client_email": st.secrets["gcp_service_account"]["client_email"],
+            "client_id": st.secrets["gcp_service_account"]["client_id"],
+            "auth_uri": st.secrets["gcp_service_account"]["auth_uri"],
+            "token_uri": st.secrets["gcp_service_account"]["token_uri"],
+            "auth_provider_x509_cert_url": st.secrets["gcp_service_account"]["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": st.secrets["gcp_service_account"]["client_x509_cert_url"],
+            "universe_domain": st.secrets["gcp_service_account"]["universe_domain"],
+        }
+        
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+        client = gspread.authorize(creds)
+        
+        # Acesso à planilha [cite: 2026-02-13]
+        url = "https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0"
+        sheet = client.open_by_url(url).sheet1
+        
+        # Salva mantendo dados anteriores [cite: 2026-01-18]
+        sheet.append_row(linha)
+    except Exception as e:
+        # Registro local caso a nuvem falhe
+        with open("dados_analise.txt", "a", encoding="utf-8") as f:
+            f.write(f"{';'.join(map(str, linha))}\n")
 
-def salvar_log_acesso():
-    """Registra apenas a data e hora de cada vez que o app é aberto"""
-    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open("log_acessos.txt", "a", encoding="utf-8") as f:
-        f.write(f"{data_hora};Acesso ao Aplicativo\n")
-
-def salvar_resultado_completo(pontos, respostas, nivel):
-    """Salva no formato solicitado: data_hora;perguntas;resposta;resultado"""
-    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    # Transforma a lista de respostas em string separada por vírgula
-    respostas_str = ",".join(map(str, respostas))
-    
-    # Cabeçalho caso o arquivo seja novo
-    arquivo = "dados_analise.txt"
-    existe = os.path.exists(arquivo)
-    
-    with open(arquivo, "a", encoding="utf-8") as f:
-        if not existe:
-            f.write("data_hora;respostas_detalhadas;pontuacao_total;resultado_nivel\n")
-        f.write(f"{data_hora};{respostas_str};{pontos};{nivel}\n")
-
-# Registrar acesso inicial na sessão
-if 'log_inicial' not in st.session_state:
-    salvar_log_acesso()
-    st.session_state['log_inicial'] = True
-
-# --- INTERFACE E DESIGN NEON ---
+# --- DESIGN NEON E FONTES 26px ---
 st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
-    h1 {color: #bb86fc !important; text-align: center; font-size: 2.8rem !important; margin-bottom: 10px;}
-    .intro-text {
-        font-size: 16px; color: #d1d1d1; text-align: justify; 
-        background: rgba(187, 134, 252, 0.1); padding: 20px; 
-        border-radius: 15px; border-left: 5px solid #bb86fc;
-        margin-bottom: 30px; line-height: 1.6;
-    }
-    .pergunta {
-        text-align: center; font-size: 26px !important; 
-        margin: 60px 0 30px; color: #ffffff; font-weight: 700;
-        line-height: 1.4;
-    }
-    /* DESIGN DOS BOTÕES IGUAL À IMAGEM */
-    div.row-widget.stRadio > div { flex-direction: row !important; justify-content: center !important; gap: 40px !important; }
+    .pergunta {text-align: center; font-size: 26px !important; margin: 50px 0 30px; color: #ffffff; font-weight: 700;}
+    
+    /* BOTÕES CIRCULARES NEON */
+    div.row-widget.stRadio > div { flex-direction: row !important; justify-content: center !important; gap: 35px !important; }
     div.row-widget.stRadio div[data-testid="stMarkdownContainer"] { display: none !important; }
     div.row-widget.stRadio label div[dir="ltr"] {
         background-color: #b784f7 !important; color: #000 !important;
-        width: 85px !important; height: 85px !important; border-radius: 50% !important;
+        width: 80px !important; height: 80px !important; border-radius: 50% !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
-        font-size: 28px !important; font-weight: 900 !important;
-        box-shadow: 0 0 25px rgba(183, 132, 247, 0.8) !important; margin-bottom: 15px !important;
+        font-size: 26px !important; font-weight: 900 !important;
+        box-shadow: 0 0 20px rgba(183, 132, 247, 0.8) !important; margin-bottom: 10px !important;
     }
-    div.row-widget.stRadio label p { font-size: 18px !important; color: #ffffff !important; font-weight: 500 !important; }
+    div.row-widget.stRadio label p { font-size: 18px !important; color: #d1d1d1 !important; text-align: center; }
     div.row-widget.stRadio label[data-checked="true"] div[dir="ltr"] {
-        background-color: #ffffff !important; box-shadow: 0 0 45px #b784f7 !important; transform: scale(1.15);
-    }
-    .resultado-box {
-        background: linear-gradient(135deg, #1a0033, #2d0055);
-        padding: 40px; border-radius: 25px; border: 3px solid #bb86fc; text-align: center; margin-top: 60px;
+        background-color: #ffffff !important; box-shadow: 0 0 35px #b784f7 !important; transform: scale(1.1);
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>Análise de Risco Comportamental</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#bb86fc;'>Análise de Risco Comportamental</h1>", unsafe_allow_html=True)
 
-st.markdown("""
-<div class="intro-text">
-    <b>Justificativa Científica:</b><br>
-    Este protocolo identifica padrões de <b>Coerção Coercitiva</b>. A ciência demonstra que o controle invisível 
-    antecede a violência física grave. Responder a este questionário ajuda a identificar riscos precocemente.
-</div>
-""", unsafe_allow_html=True)
-
-# Expander de Referências
-with st.expander("🔬 Ver Embasamento Científico e Referências"):
-    st.markdown("<div style='font-size:16px; color:#bbb;'>Ref: Charlot (2025), Dutton (2006), Campbell (2003).</div>", unsafe_allow_html=True)
-
-st.markdown("<hr style='border-color:#333'>", unsafe_allow_html=True)
-
-opcoes_labels = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
+# Lista de Perguntas
+opcoes = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
     "Ele tenta controlar o que você veste, com quem fala ou para onde vai?",
     "Ele desqualifica sua percepção da realidade (faz você duvidar da sua memória)?",
     "Ele demonstra ciúme excessivo e justifica isso como 'excesso de amor'?",
-    "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?",
-    "Ele isola você de sua rede de apoio (família/amigos)?",
-    "Há um ciclo de 'explosão de raiva' seguido por 'pedidos de desculpas'?",
-    "Ele pressiona ou obriga você a ter relações sexuais quando você não quer?",
-    "Ele sabota seus métodos contraceptivos ou pressiona por uma gravidez?",
-    "Ele costuma culpar você pelas reações agressivas dele?"
+    "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?"
 ]
 
 respostas = []
 for i, p in enumerate(perguntas, 1):
     st.markdown(f'<div class="pergunta">{i}. {p}</div>', unsafe_allow_html=True)
-    escolha = st.radio(
-        label=f"q{i}", 
-        options=[1, 2, 3, 4], 
-        index=None, 
-        horizontal=True, 
-        key=f"q{i}", 
-        format_func=lambda x: opcoes_labels[x], 
-        label_visibility="collapsed"
-    )
-    if escolha:
-        respostas.append(escolha)
+    escolha = st.radio(label=f"q{i}", options=[1, 2, 3, 4], index=None, horizontal=True, key=f"q{i}", format_func=lambda x: opcoes[x], label_visibility="collapsed")
+    if escolha: respostas.append(escolha)
 
-# Finalização e Salvamento
 if len(respostas) == len(perguntas):
-    pontuacao_total = sum(respostas)
+    pontos = sum(respostas)
+    nivel = "ALTO" if pontos > 14 else ("MODERADO" if pontos > 9 else "BAIXO")
+    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    if pontuacao_total <= 18: nivel = "BAIXO RISCO"
-    elif pontuacao_total <= 28: nivel = "RISCO MODERADO"
-    else: nivel = "ALTO RISCO"
-
-    # Salva no arquivo TXT exatamente no formato pedido
-    salvar_resultado_completo(pontuacao_total, respostas, nivel)
+    # Linha para a planilha: data_hora;perguntas;resposta;resultado
+    linha = [data_hora, "; ".join(perguntas), ", ".join(map(str, respostas)), nivel]
+    salvar_na_planilha(linha)
     
-    st.markdown("<div class='resultado-box'>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='color:#bb86fc'>{nivel}</h2>", unsafe_allow_html=True)
-    st.markdown(f"<div style='font-size:5rem; font-weight:900; color:#bb86fc;'>{pontuacao_total}/40</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:center; background:#1a0033; padding:20px; border-radius:20px; border:2px solid #bb86fc;'><h2>{nivel} RISCO ({pontos}/20)</h2></div>", unsafe_allow_html=True)
 
-st.markdown("<br><br><div style='text-align:center; color:#888; font-size:16px;'>📞 Ajuda Imediata? <b>Disque 180</b></div>", unsafe_allow_html=True)
+st.markdown("<br><p style='text-align:center; color:#888;'>📞 Ajuda? Disque 180</p>", unsafe_allow_html=True)
