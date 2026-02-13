@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import os
 
 # Configuração da Página
 st.set_page_config(
@@ -8,6 +9,15 @@ st.set_page_config(
     page_icon="⚠️",
     layout="centered"
 )
+
+# FUNÇÃO DE LOG: Registra data/hora sempre que o app é carregado
+def registrar_log():
+    data_hora_acesso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("log_acessos.txt", "a", encoding="utf-8") as log_file:
+        log_file.write(f"Aplicativo acessado em: {data_hora_acesso}\n")
+
+# Executa o log de acesso ao iniciar
+registrar_log()
 
 # CSS PARA DESIGN NEON (CÍRCULOS GRANDES) E FONTES 26px
 st.markdown("""
@@ -105,19 +115,19 @@ st.markdown("""
 with st.expander("🔬 Ver Embasamento Científico e Referências"):
     st.markdown("""
     <div style="font-size:16px; color:#bbb;">
-    1. <b>Modelo de Duluth:</b> Baseado na roda de poder e controle em relacionamentos abusivos.<br>
-    2. <b>Escala de Charlot (2025):</b> Focada na validade preditiva de sinais de alerta precoces.<br>
-    3. <b>Danger Assessment (Campbell, 2003):</b> Ferramenta científica para avaliar risco de feminicídio.<br><br>
+    1. <b>Modelo de Duluth:</b> Baseado na roda de poder e controle.<br>
+    2. <b>Escala de Charlot (2025):</b> Focada na validade preditiva de sinais precoces.<br>
+    3. <b>Danger Assessment:</b> Ferramenta padrão ouro para avaliar risco de feminicídio.<br><br>
     <b>Referências:</b><br>
-    • Charlot, A. et al. (2025). <i>The Predictive Validity of Intimate Partner Violence Warning Signs.</i><br>
-    • Dutton, D. G. (2006). <i>The Abusive Personality: Violence and Control.</i><br>
+    • Charlot, A. et al. (2025). <i>The Predictive Validity of IPV Warning Signs.</i><br>
+    • Dutton, D. G. (2006). <i>The Abusive Personality.</i><br>
     • Pence, E. (1993). <i>The Duluth Model.</i>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown("<hr style='border-color:#333'>", unsafe_allow_html=True)
 
-# Configuração de Respostas
+# Configuração de Perguntas
 opcoes = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
@@ -147,14 +157,14 @@ for i, p in enumerate(perguntas, 1):
     if escolha:
         respostas.append(escolha)
 
-# Resultados e Registro de Dados
+# Resultados e Registro de Dados de Resposta
 if len(respostas) == len(perguntas):
     pontuacao_total = sum(respostas)
-    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data_hora_fim = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # Salva mantendo os dados anteriores [cite: 2026-01-18]
+    # Salva preservando dados anteriores [cite: 2026-01-18]
     with open("dados_analise.txt", "a", encoding="utf-8") as f:
-        f.write(f"Data: {data_hora} | Pontos: {pontuacao_total} | Respostas: {respostas}\n")
+        f.write(f"Teste Finalizado em: {data_hora_fim} | Pontos: {pontuacao_total} | Respostas: {respostas}\n")
     
     st.markdown("<div class='resultado-box'>", unsafe_allow_html=True)
     if pontuacao_total <= 18:
