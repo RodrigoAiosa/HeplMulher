@@ -47,7 +47,7 @@ st.markdown("""
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
     .pergunta {
-        text-align: center;
+        text-align: left;  /* PERGUNTAS ALINHADAS À ESQUERDA */
         font-size: 26px !important;
         margin: 50px 0 30px;
         color: #ffffff;
@@ -116,11 +116,11 @@ if len(respostas_coletadas) == len(perguntas):
         linhas_para_planilha = []
         for r in respostas_coletadas:
             linhas_para_planilha.append([
-                agora,          # Coluna A
-                id_ac,          # Coluna B
-                r['pergunta'],  # Coluna C
-                r['resposta'],  # Coluna D
-                nivel           # Coluna E
+                agora,
+                id_ac,
+                r['pergunta'],
+                r['resposta'],
+                nivel
             ])
 
         if salvar_na_planilha(linhas_para_planilha):
