@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-import time
 
 # Configuração da Página
 st.set_page_config(page_title="Detector de Riscos", page_icon="⚠️", layout="centered")
@@ -12,17 +11,17 @@ st.set_page_config(page_title="Detector de Riscos", page_icon="⚠️", layout="
 def salvar_na_planilha(lista_de_linhas):
     try:
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        # Usa as credenciais das Secrets configuradas
         creds_info = st.secrets["gcp_service_account"]
         creds = Credentials.from_service_account_info(creds_info, scopes=scope)
         client = gspread.authorize(creds)
         
-        # URL da planilha [cite: 2026-02-13]
+        # URL da sua planilha [cite: 2026-02-13]
         url = "https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0"
         sheet = client.open_by_url(url).sheet1
         
-        # append_rows adiciona várias linhas de uma vez, preservando dados [cite: 2026-01-18]
-        sheet.append_rows(lista_de_linhas)
+        # append_rows adiciona as 10 linhas começando da Coluna A [cite: 2026-01-18]
+        # O parâmetro value_input_option="USER_ENTERED" garante que datas e números sejam formatados corretamente
+        sheet.append_rows(lista_de_linhas, value_input_option="USER_ENTERED")
         return True
     except Exception as e:
         st.error(f"Erro ao salvar: {e}")
@@ -58,7 +57,7 @@ st.markdown("<h1 style='text-align:center; color:#bb86fc;'>Análise de Risco Com
 if 'id_acesso' not in st.session_state:
     st.session_state['id_acesso'] = datetime.now().strftime("%Y%m%d%H%M%S")
 
-# Lista das 10 Perguntas
+# Lista das 10 Perguntas Completas [cite: 2026-02-13]
 opcoes_texto = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
@@ -80,32 +79,34 @@ for i, p in enumerate(perguntas, 1):
     if escolha:
         respostas_coletadas.append({"pergunta": p, "resposta": opcoes_texto[escolha], "valor": escolha})
 
-# Botão de Envio
+# Finalização
 if len(respostas_coletadas) == len(perguntas):
     if st.button("Finalizar e Enviar Análise"):
         total_pontos = sum([item['valor'] for item in respostas_coletadas])
         
-        # Cálculo de Resultado
+        # Classificação do Risco
         if total_pontos <= 18: nivel = "BAIXO"
         elif total_pontos <= 28: nivel = "MODERADO"
         else: nivel = "ALTO"
         
-        data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         id_acesso = st.session_state['id_acesso']
         
-        # CRIAÇÃO DAS 10 LINHAS: data_hora; id_acesso; perguntas; respostas; resultado
+        # CRIAÇÃO DAS 10 LINHAS: Coluna A até E
         linhas_final = []
         for item in respostas_coletadas:
+            # A ordem aqui define a coluna: [A, B, C, D, E]
             linhas_final.append([
-                data_hora,
-                id_acesso,
-                item['pergunta'],
-                item['resposta'],
-                nivel
+                data_hora,          # Coluna A
+                id_acesso,          # Coluna B
+                item['pergunta'],   # Coluna C
+                item['resposta'],   # Coluna D
+                nivel               # Coluna E
             ])
         
         if salvar_na_planilha(linhas_final):
-            st.success("Análise concluída e dados gravados corretamente!")
+            st.balloons()
+            st.success("Dados gravados com sucesso na planilha log_acesso!")
             st.markdown(f"<div style='text-align:center; background:#1a0033; padding:20px; border-radius:20px; border:2px solid #bb86fc;'><h2>{nivel} RISCO ({total_pontos}/40)</h2></div>", unsafe_allow_html=True)
 
 st.markdown("<br><p style='text-align:center; color:#888;'>📞 Ajuda? Disque 180</p>", unsafe_allow_html=True)
