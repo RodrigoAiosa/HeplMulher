@@ -39,26 +39,36 @@ def salvar_na_planilha(dados_finais):
         return False
 
 
-# --- CSS ---
+# --- CSS GLOBAL ---
 st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
 
-    .pergunta {
-        text-align: center;
-        font-size: 26px !important;
-        margin: 10px 0 20px;
-        color: #ffffff;
-        font-weight: 700;
+    /* BLOCO NEON IGUAL AO DA IMAGEM */
+    .bloco-neon {
+        background: linear-gradient(145deg, #1a0033, #2a004d);
+        padding: 35px;
+        border-radius: 25px;
+        margin-bottom: 40px;
+        border: 2px solid #7b2cff;
+        box-shadow: 
+            0 0 15px rgba(123, 44, 255, 0.6),
+            0 0 30px rgba(123, 44, 255, 0.4),
+            inset 0 0 10px rgba(123, 44, 255, 0.3);
     }
 
-    .card-pergunta {
-        background-color:#1a0033;
-        padding:25px;
-        border-radius:15px;
-        margin-bottom:25px;
-        box-shadow: 0 0 15px rgba(183,132,247,0.4);
+    .pergunta {
+        text-align: center;
+        font-size: 24px !important;
+        margin-bottom: 25px;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    div.row-widget.stRadio > div {
+        justify-content: center !important;
+        gap: 30px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -93,7 +103,7 @@ respostas_coletadas = []
 for i, p in enumerate(perguntas, 1):
 
     with st.container():
-        st.markdown('<div class="card-pergunta">', unsafe_allow_html=True)
+        st.markdown('<div class="bloco-neon">', unsafe_allow_html=True)
 
         st.markdown(
             f'<div class="pergunta">{i}. {p}</div>',
