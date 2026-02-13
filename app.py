@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from streamlit_gsheets import GSheetsConnection
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Configuração da Página
 st.set_page_config(
@@ -10,49 +11,42 @@ st.set_page_config(
     layout="centered"
 )
 
-# Conexão com sua planilha específica
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-# FUNÇÃO DE REGISTRO: Salva na planilha e em .txt local [cite: 2026-02-13, 2026-01-18]
-def registrar_dados(pontos=None, respostas=None, tipo="acesso"):
-    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Registro em .txt local (backup) [cite: 2026-02-13]
-    with open("log_geral.txt", "a", encoding="utf-8") as f:
-        f.write(f"{data_hora} | {tipo} | Pontos: {pontos} | Respostas: {respostas}\n")
-    
-    # Registro na Planilha Google (Sempre preservando dados) [cite: 2026-01-18]
+# FUNÇÃO PARA CONECTAR E REGISTRAR (Google Sheets)
+def registrar_na_planilha(dados):
     try:
-        df_atual = conn.read(worksheet="Sheet1")
-        novo_registro = pd.DataFrame([{
-            "Data/Hora": data_hora, 
-            "Tipo": tipo, 
-            "Pontuacao": pontos, 
-            "Respostas": str(respostas)
-        }])
-        df_final = pd.concat([df_atual, novo_registro], ignore_index=True)
-        conn.update(worksheet="Sheet1", data=df_final)
-    except Exception:
-        # Se a planilha estiver vazia, cria o primeiro registro
-        novo_registro = pd.DataFrame([{
-            "Data/Hora": data_hora, 
-            "Tipo": tipo, 
-            "Pontuacao": pontos, 
-            "Respostas": str(respostas)
-        }])
-        conn.update(worksheet="Sheet1", data=novo_registro)
+        # Tenta conectar usando as secrets do Streamlit
+        # Você deve colocar suas credenciais JSON nas Secrets ou usar login por link público se configurado
+        # Para fins de simplicidade e evitar o erro de 'Unsupported', usamos gspread
+        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        
+        # Se você tiver o JSON da conta de serviço nas secrets:
+        if "gcp_service_account" in st.secrets:
+            creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
+            client = gspread.authorize(creds)
+            # Abre pela URL que você forneceu
+            sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0").sheet1
+            sheet.append_row(dados)
+    except Exception as e:
+        # Se falhar o Google Sheets, salva no TXT local para não perder o dado [cite: 2026-02-13]
+        with open("backup_dados.txt", "a", encoding="utf-8") as f:
+            f.write(f"{dados}\n")
 
-# Log de acesso ao carregar
+def registrar_evento(pontos=None, respostas=None, tipo="acesso"):
+    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    linha = [data_hora, tipo, str(pontos), str(respostas)]
+    registrar_na_planilha(linha)
+
+# Log de acesso único por sessão
 if 'log_feito' not in st.session_state:
-    registrar_dados(tipo="Acesso ao App")
+    registrar_evento(tipo="Acesso ao App")
     st.session_state['log_feito'] = True
 
-# CSS PARA DESIGN NEON (FONTES 26px E CÍRCULOS GRANDES) [cite: 2026-02-13]
+# --- INTERFACE (DESIGN NEON 26px) ---
 st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
     .stApp {background-color: #0e001a;}
-    h1 {color: #bb86fc !important; text-align: center; font-size: 2.8rem !important; margin-bottom: 10px;}
+    h1 {color: #bb86fc !important; text-align: center; font-size: 2.8rem !important;}
     .intro-text {
         font-size: 16px; color: #d1d1d1; text-align: justify; 
         background: rgba(187, 134, 252, 0.1); padding: 20px; 
@@ -80,7 +74,6 @@ st.markdown("""
         background: linear-gradient(135deg, #1a0033, #2d0055);
         padding: 40px; border-radius: 25px; border: 3px solid #bb86fc; text-align: center; margin-top: 60px;
     }
-    .pontuacao-num { font-size: 5rem; font-weight: 900; color: #bb86fc; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -89,18 +82,9 @@ st.markdown("<h1>Análise de Risco Comportamental</h1>", unsafe_allow_html=True)
 st.markdown("""
 <div class="intro-text">
     <b>Por que estas perguntas são vitais?</b><br>
-    Este protocolo foi estruturado com base em estudos de <b>Psicologia Forense</b>. As perguntas focam em comportamentos preditores de alta letalidade, permitindo a identificação do risco em estágios precoces.
+    Este protocolo foi estruturado com base em estudos de <b>Psicologia Forense</b>. As perguntas identificam "preditores de alta letalidade", permitindo a identificação do risco em estágios precoces.
 </div>
 """, unsafe_allow_html=True)
-
-with st.expander("🔬 Ver Embasamento Científico e Referências"):
-    st.markdown("""
-    <div style="font-size:16px; color:#bbb;">
-    • <b>Modelo de Duluth:</b> Poder e controle.<br>
-    • <b>Escala de Charlot (2025):</b> Sinais preditivos precoces.<br>
-    • <b>Danger Assessment (Campbell):</b> Avaliação de risco grave.
-    </div>
-    """, unsafe_allow_html=True)
 
 opcoes = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
@@ -124,13 +108,13 @@ for i, p in enumerate(perguntas, 1):
 
 if len(respostas) == len(perguntas):
     pontuacao_total = sum(respostas)
-    registrar_dados(pontos=pontuacao_total, respostas=respostas, tipo="Teste Finalizado")
+    registrar_evento(pontos=pontuacao_total, respostas=respostas, tipo="Teste Finalizado")
     
     st.markdown("<div class='resultado-box'>", unsafe_allow_html=True)
     cor = "#f44336" if pontuacao_total > 28 else ("#ffeb3b" if pontuacao_total > 18 else "#4caf50")
     nivel = "ALTO RISCO" if pontuacao_total > 28 else ("RISCO MODERADO" if pontuacao_total > 18 else "BAIXO RISCO")
     st.markdown(f"<h2 style='color:{cor}'>{nivel}</h2>", unsafe_allow_html=True)
-    st.markdown(f"<div class='pontuacao-num'>{pontuacao_total}/40</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size:5rem; font-weight:900; color:#bb86fc;'>{pontuacao_total}/40</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<br><br><div style='text-align:center; color:#888; font-size:16px;'>📞 Ajuda Imediata? <b>Disque 180</b></div>", unsafe_allow_html=True)
