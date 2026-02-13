@@ -3,45 +3,32 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+import time
 
 # Configuração da Página
 st.set_page_config(page_title="Detector de Riscos", page_icon="⚠️", layout="centered")
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
-def salvar_na_planilha(linha):
+def salvar_na_planilha(lista_de_linhas):
     try:
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        
-        # Carrega credenciais formatadas do Streamlit Secrets
-        creds_dict = {
-            "type": st.secrets["gcp_service_account"]["type"],
-            "project_id": st.secrets["gcp_service_account"]["project_id"],
-            "private_key_id": st.secrets["gcp_service_account"]["private_key_id"],
-            "private_key": st.secrets["gcp_service_account"]["private_key"],
-            "client_email": st.secrets["gcp_service_account"]["client_email"],
-            "client_id": st.secrets["gcp_service_account"]["client_id"],
-            "auth_uri": st.secrets["gcp_service_account"]["auth_uri"],
-            "token_uri": st.secrets["gcp_service_account"]["token_uri"],
-            "auth_provider_x509_cert_url": st.secrets["gcp_service_account"]["auth_provider_x509_cert_url"],
-            "client_x509_cert_url": st.secrets["gcp_service_account"]["client_x509_cert_url"],
-            "universe_domain": st.secrets["gcp_service_account"]["universe_domain"],
-        }
-        
-        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+        # Usa as credenciais das Secrets configuradas
+        creds_info = st.secrets["gcp_service_account"]
+        creds = Credentials.from_service_account_info(creds_info, scopes=scope)
         client = gspread.authorize(creds)
         
-        # Acesso à planilha [cite: 2026-02-13]
+        # URL da planilha [cite: 2026-02-13]
         url = "https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0"
         sheet = client.open_by_url(url).sheet1
         
-        # Salva mantendo dados anteriores [cite: 2026-01-18]
-        sheet.append_row(linha)
+        # append_rows adiciona várias linhas de uma vez, preservando dados [cite: 2026-01-18]
+        sheet.append_rows(lista_de_linhas)
+        return True
     except Exception as e:
-        # Registro local caso a nuvem falhe
-        with open("dados_analise.txt", "a", encoding="utf-8") as f:
-            f.write(f"{';'.join(map(str, linha))}\n")
+        st.error(f"Erro ao salvar: {e}")
+        return False
 
-# --- DESIGN NEON E FONTES 26px ---
+# --- CSS: DESIGN NEON E FONTES 26px ---
 st.markdown("""
 <style>
     .main {background-color: #0e001a; color: white;}
@@ -67,31 +54,58 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align:center; color:#bb86fc;'>Análise de Risco Comportamental</h1>", unsafe_allow_html=True)
 
-# Lista de Perguntas
-opcoes = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
+# Gera o ID único para esta sessão específica
+if 'id_acesso' not in st.session_state:
+    st.session_state['id_acesso'] = datetime.now().strftime("%Y%m%d%H%M%S")
+
+# Lista das 10 Perguntas
+opcoes_texto = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
     "Ele tenta controlar o que você veste, com quem fala ou para onde vai?",
     "Ele desqualifica sua percepção da realidade (faz você duvidar da sua memória)?",
     "Ele demonstra ciúme excessivo e justifica isso como 'excesso de amor'?",
-    "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?"
+    "Ele monitora suas redes sociais, mensagens ou exige saber suas senhas?",
+    "Ele isola você de sua rede de apoio (família/amigos)?",
+    "Há um ciclo de 'explosão de raiva' seguido por 'pedidos de desculpas'?",
+    "Ele pressiona ou obriga você a ter relações sexuais quando você não quer?",
+    "Ele sabota seus métodos contraceptivos ou pressiona por uma gravidez?",
+    "Ele costuma culpar você pelas reações agressivas dele?"
 ]
 
-respostas = []
+respostas_coletadas = []
 for i, p in enumerate(perguntas, 1):
     st.markdown(f'<div class="pergunta">{i}. {p}</div>', unsafe_allow_html=True)
-    escolha = st.radio(label=f"q{i}", options=[1, 2, 3, 4], index=None, horizontal=True, key=f"q{i}", format_func=lambda x: opcoes[x], label_visibility="collapsed")
-    if escolha: respostas.append(escolha)
+    escolha = st.radio(label=f"q{i}", options=[1, 2, 3, 4], index=None, horizontal=True, key=f"q{i}", format_func=lambda x: opcoes_texto[x], label_visibility="collapsed")
+    if escolha:
+        respostas_coletadas.append({"pergunta": p, "resposta": opcoes_texto[escolha], "valor": escolha})
 
-if len(respostas) == len(perguntas):
-    pontos = sum(respostas)
-    nivel = "ALTO" if pontos > 14 else ("MODERADO" if pontos > 9 else "BAIXO")
-    data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Linha para a planilha: data_hora;perguntas;resposta;resultado
-    linha = [data_hora, "; ".join(perguntas), ", ".join(map(str, respostas)), nivel]
-    salvar_na_planilha(linha)
-    
-    st.markdown(f"<div style='text-align:center; background:#1a0033; padding:20px; border-radius:20px; border:2px solid #bb86fc;'><h2>{nivel} RISCO ({pontos}/20)</h2></div>", unsafe_allow_html=True)
+# Botão de Envio
+if len(respostas_coletadas) == len(perguntas):
+    if st.button("Finalizar e Enviar Análise"):
+        total_pontos = sum([item['valor'] for item in respostas_coletadas])
+        
+        # Cálculo de Resultado
+        if total_pontos <= 18: nivel = "BAIXO"
+        elif total_pontos <= 28: nivel = "MODERADO"
+        else: nivel = "ALTO"
+        
+        data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        id_acesso = st.session_state['id_acesso']
+        
+        # CRIAÇÃO DAS 10 LINHAS: data_hora; id_acesso; perguntas; respostas; resultado
+        linhas_final = []
+        for item in respostas_coletadas:
+            linhas_final.append([
+                data_hora,
+                id_acesso,
+                item['pergunta'],
+                item['resposta'],
+                nivel
+            ])
+        
+        if salvar_na_planilha(linhas_final):
+            st.success("Análise concluída e dados gravados corretamente!")
+            st.markdown(f"<div style='text-align:center; background:#1a0033; padding:20px; border-radius:20px; border:2px solid #bb86fc;'><h2>{nivel} RISCO ({total_pontos}/40)</h2></div>", unsafe_allow_html=True)
 
 st.markdown("<br><p style='text-align:center; color:#888;'>📞 Ajuda? Disque 180</p>", unsafe_allow_html=True)
