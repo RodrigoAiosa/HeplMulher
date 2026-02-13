@@ -15,12 +15,11 @@ def salvar_na_planilha(lista_de_linhas):
         creds = Credentials.from_service_account_info(creds_info, scopes=scope)
         client = gspread.authorize(creds)
         
-        # URL da sua planilha [cite: 2026-02-13]
+        # Abre a planilha log_acesso [cite: 2026-02-13]
         url = "https://docs.google.com/spreadsheets/d/1HOrUNzIMDhsGVIlFjfowEEsNS2UrkS57oIlYLVRZ03M/edit#gid=0"
         sheet = client.open_by_url(url).sheet1
         
-        # append_rows adiciona as 10 linhas começando da Coluna A [cite: 2026-01-18]
-        # O parâmetro value_input_option="USER_ENTERED" garante que datas e números sejam formatados corretamente
+        # O comando append_rows com a lista correta garante gravação na Coluna A [cite: 2026-01-18]
         sheet.append_rows(lista_de_linhas, value_input_option="USER_ENTERED")
         return True
     except Exception as e:
@@ -34,7 +33,6 @@ st.markdown("""
     .stApp {background-color: #0e001a;}
     .pergunta {text-align: center; font-size: 26px !important; margin: 50px 0 30px; color: #ffffff; font-weight: 700;}
     
-    /* BOTÕES CIRCULARES NEON */
     div.row-widget.stRadio > div { flex-direction: row !important; justify-content: center !important; gap: 35px !important; }
     div.row-widget.stRadio div[data-testid="stMarkdownContainer"] { display: none !important; }
     div.row-widget.stRadio label div[dir="ltr"] {
@@ -53,11 +51,11 @@ st.markdown("""
 
 st.markdown("<h1 style='text-align:center; color:#bb86fc;'>Análise de Risco Comportamental</h1>", unsafe_allow_html=True)
 
-# Gera o ID único para esta sessão específica
+# Gera ID único para o acesso
 if 'id_acesso' not in st.session_state:
     st.session_state['id_acesso'] = datetime.now().strftime("%Y%m%d%H%M%S")
 
-# Lista das 10 Perguntas Completas [cite: 2026-02-13]
+# Perguntas Completas
 opcoes_texto = {1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre"}
 perguntas = [
     "Ele demonstra um senso de 'posse' ou autoridade superior sobre suas decisões?",
@@ -77,36 +75,25 @@ for i, p in enumerate(perguntas, 1):
     st.markdown(f'<div class="pergunta">{i}. {p}</div>', unsafe_allow_html=True)
     escolha = st.radio(label=f"q{i}", options=[1, 2, 3, 4], index=None, horizontal=True, key=f"q{i}", format_func=lambda x: opcoes_texto[x], label_visibility="collapsed")
     if escolha:
-        respostas_coletadas.append({"pergunta": p, "resposta": opcoes_texto[escolha], "valor": escolha})
+        respostas_coletadas.append({"p": p, "r": opcoes_texto[escolha], "v": escolha})
 
-# Finalização
+# Botão Final
 if len(respostas_coletadas) == len(perguntas):
-    if st.button("Finalizar e Enviar Análise"):
-        total_pontos = sum([item['valor'] for item in respostas_coletadas])
+    if st.button("Finalizar e Enviar"):
+        total = sum([x['v'] for x in respostas_coletadas])
+        nivel = "ALTO" if total > 28 else ("MODERADO" if total > 18 else "BAIXO")
         
-        # Classificação do Risco
-        if total_pontos <= 18: nivel = "BAIXO"
-        elif total_pontos <= 28: nivel = "MODERADO"
-        else: nivel = "ALTO"
+        agora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        id_ac = st.session_state['id_acesso']
         
-        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        id_acesso = st.session_state['id_acesso']
-        
-        # CRIAÇÃO DAS 10 LINHAS: Coluna A até E
-        linhas_final = []
+        # MONTAGEM DAS LINHAS - GARANTINDO COLUNA A, B, C, D, E
+        # data_hora (A); id_acesso (B); perguntas (C); respostas (D); resultado (E)
+        dados_finais = []
         for item in respostas_coletadas:
-            # A ordem aqui define a coluna: [A, B, C, D, E]
-            linhas_final.append([
-                data_hora,          # Coluna A
-                id_acesso,          # Coluna B
-                item['pergunta'],   # Coluna C
-                item['resposta'],   # Coluna D
-                nivel               # Coluna E
-            ])
+            dados_finais.append([agora, id_ac, item['p'], item['r'], nivel])
         
-        if salvar_na_planilha(linhas_final):
-            st.balloons()
-            st.success("Dados gravados com sucesso na planilha log_acesso!")
-            st.markdown(f"<div style='text-align:center; background:#1a0033; padding:20px; border-radius:20px; border:2px solid #bb86fc;'><h2>{nivel} RISCO ({total_pontos}/40)</h2></div>", unsafe_allow_html=True)
+        if salvar_na_planilha(dados_finais):
+            st.success("Dados gravados corretamente na Coluna A!")
+            st.markdown(f"<h2 style='text-align:center;'>Risco {nivel}</h2>", unsafe_allow_html=True)
 
-st.markdown("<br><p style='text-align:center; color:#888;'>📞 Ajuda? Disque 180</p>", unsafe_allow_html=True)
+st.markdown("<br><p style='text-align:center; color:#888;'>📞 Disque 180</p>", unsafe_allow_html=True)
