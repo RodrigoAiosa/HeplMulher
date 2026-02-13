@@ -3,14 +3,14 @@ from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Configuração da Página
+# CONFIGURAÇÃO
 st.set_page_config(
     page_title="Detector de Riscos",
     page_icon="⚠️",
     layout="centered"
 )
 
-# --- CONEXÃO COM GOOGLE SHEETS ---
+# --- GOOGLE SHEETS ---
 def salvar_na_planilha(dados_finais):
     try:
         scope = [
@@ -39,16 +39,23 @@ def salvar_na_planilha(dados_finais):
         return False
 
 
-# CSS
+# --- CSS ---
 st.markdown("""
 <style>
-.stApp {background-color:#0e001a;}
+.stApp {
+    background-color: #0e001a;
+}
 
-.bloco-neon{
+/* Estilo aplicado diretamente ao container */
+div[data-testid="stVerticalBlock"] > div {
+    border-radius: 25px;
+}
+
+.bloco-pergunta {
     background: linear-gradient(145deg, #1a0033, #2a004d);
     padding: 30px;
     border-radius: 25px;
-    margin-bottom: 35px;
+    margin-bottom: 40px;
     border: 2px solid #7b2cff;
     box-shadow:
         0 0 20px rgba(123,44,255,0.7),
@@ -56,11 +63,11 @@ st.markdown("""
         inset 0 0 12px rgba(123,44,255,0.3);
 }
 
-.pergunta{
-    font-size:22px;
-    font-weight:600;
-    margin-bottom:15px;
-    color:white;
+.pergunta {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: white;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -70,6 +77,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# ID único
 if 'id_acesso' not in st.session_state:
     st.session_state['id_acesso'] = datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -92,21 +100,28 @@ respostas_coletadas = []
 
 for i, p in enumerate(perguntas, 1):
 
-    st.markdown('<div class="bloco-neon">', unsafe_allow_html=True)
+    # CONTAINER REAL
+    container = st.container()
 
-    st.markdown(f'<div class="pergunta">{i}. {p}</div>', unsafe_allow_html=True)
+    with container:
+        st.markdown('<div class="bloco-pergunta">', unsafe_allow_html=True)
 
-    escolha = st.radio(
-        label=f"q{i}",
-        options=[1,2,3,4],
-        index=None,
-        horizontal=True,
-        key=f"q{i}",
-        format_func=lambda x: opcoes[x],
-        label_visibility="collapsed"
-    )
+        st.markdown(
+            f'<div class="pergunta">{i}. {p}</div>',
+            unsafe_allow_html=True
+        )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        escolha = st.radio(
+            label=f"q{i}",
+            options=[1,2,3,4],
+            index=None,
+            horizontal=True,
+            key=f"q{i}",
+            format_func=lambda x: opcoes[x],
+            label_visibility="collapsed"
+        )
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
     if escolha:
         respostas_coletadas.append({
@@ -136,6 +151,12 @@ if len(respostas_coletadas) == len(perguntas):
 
         if salvar_na_planilha(linhas_para_planilha):
             st.success("Análise salva com sucesso!")
-            st.markdown(f"<h2 style='text-align:center;'>Resultado: {nivel}</h2>", unsafe_allow_html=True)
+            st.markdown(
+                f"<h2 style='text-align:center;'>Resultado: {nivel}</h2>",
+                unsafe_allow_html=True
+            )
 
-st.markdown("<br><p style='text-align:center; color:#888;'>📞 Disque 180</p>", unsafe_allow_html=True)
+st.markdown(
+    "<br><p style='text-align:center; color:#888;'>📞 Disque 180</p>",
+    unsafe_allow_html=True
+)
