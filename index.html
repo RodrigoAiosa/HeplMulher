@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOS Mulher · Help Mulher</title>
+<meta name="description" content="Help Mulher: proteção discreta para mulheres em situação de risco. Faça a análise de risco do seu relacionamento e encontre ajuda.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f5;
+    --surface: #ffffff;
+    --ink: #2a1f2d;
+    --muted: #6b5d6e;
+    --line: #e9e1e6;
+    --brand: #7b2d6b;
+    --brand-soft: #f4e8f1;
+    --danger: #c62828;
+    --warn: #e07b00;
+    --ok: #2e7d32;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17121a;
+      --surface: #221b26;
+      --ink: #f3ecf4;
+      --muted: #b6a8ba;
+      --line: #3a2f3f;
+      --brand: #d58cc4;
+      --brand-soft: #33243a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 "Inter", system-ui, sans-serif;
+  }
+  a { color: var(--brand); }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 16px; }
+
+  /* Saída rápida */
+  .quick-exit {
+    position: fixed; top: 12px; right: 12px; z-index: 50;
+    background: var(--danger); color: #fff; border: 0;
+    padding: 10px 16px; border-radius: 999px;
+    font: 600 14px "Inter", sans-serif; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  }
+  .quick-exit small { display: block; font-weight: 400; font-size: 11px; opacity: .85; }
+
+  header.hero { padding: 72px 0 48px; }
+  .eyebrow {
+    display: inline-block; background: var(--brand-soft); color: var(--brand);
+    font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  h1, h2, h3 { font-family: "Fraunces", Georgia, serif; line-height: 1.15; }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 16px 0 12px; }
+  h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0 0 12px; }
+  h3 { font-size: 1.2rem; margin: 0 0 6px; }
+  .lead { font-size: 1.15rem; color: var(--muted); max-width: 640px; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 22px; border-radius: 12px; font-weight: 600;
+    text-decoration: none; border: 2px solid transparent; cursor: pointer;
+    font-size: 16px; font-family: inherit;
+  }
+  .btn-call { background: var(--danger); color: #fff; }
+  .btn-brand { background: var(--brand); color: #fff; }
+  .btn-ghost { border-color: var(--line); color: var(--ink); background: var(--surface); }
+
+  section { padding: 48px 0; border-top: 1px solid var(--line); }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 24px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px;
+  }
+  .card p { margin: 0; color: var(--muted); }
+  .num {
+    font-family: "Fraunces", serif; font-size: 2rem; color: var(--brand);
+    font-weight: 700; line-height: 1;
+  }
+  .tag {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    color: var(--muted); border: 1px solid var(--line);
+    border-radius: 999px; padding: 2px 10px; margin-bottom: 10px;
+  }
+
+  /* Questionário */
+  .q {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 18px 20px; margin-top: 12px;
+  }
+  .q legend { font-weight: 600; padding: 0; margin-bottom: 12px; }
+  .q fieldset { border: 0; margin: 0; padding: 0; }
+  .opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .opts label {
+    text-align: center; border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 4px; cursor: pointer; font-size: 14px; user-select: none;
+  }
+  .opts input { position: absolute; opacity: 0; pointer-events: none; }
+  .opts input:checked + span { color: #fff; }
+  .opts label:has(input:checked) { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .opts label:has(input:focus-visible) { outline: 3px solid var(--brand); outline-offset: 2px; }
+  @media (max-width: 480px) { .opts { grid-template-columns: repeat(2, 1fr); } }
+
+  .progress { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 20px; }
+  .progress > div { height: 100%; width: 0; background: var(--brand); transition: width .2s; }
+  .progress-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  #resultado { display: none; margin-top: 24px; border-radius: var(--radius); padding: 28px; color: #fff; }
+  #resultado h3 { font-size: 1.6rem; margin-bottom: 8px; }
+  #resultado p { margin: 0 0 16px; }
+  #resultado .btn { background: #fff; color: #222; }
+
+  .note { font-size: 14px; color: var(--muted); margin-top: 14px; }
+  .helplines { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: 20px; }
+  .helpline { text-decoration: none; color: inherit; }
+  .helpline .num { color: var(--danger); }
+
+  footer { padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<button class="quick-exit" id="sair" type="button" aria-label="Sair rapidamente deste site">
+  Sair rápido ✕<small>ou aperte Esc</small>
+</button>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">SOS Mulher · Help Mulher</span>
+    <h1>Ajuda discreta, quando você mais precisa.</h1>
+    <p class="lead">O Help Mulher é um aplicativo de proteção para mulheres em situação de risco. Ele fica oculto no celular e, com um gesto simples, avisa seus contatos de confiança e a polícia.</p>
+    <div class="actions">
+      <a class="btn btn-call" href="tel:190">📞 Emergência: 190</a>
+      <a class="btn btn-brand" href="#analise">Fazer análise de risco</a>
+      <a class="btn btn-ghost" href="tel:180">Central da Mulher: 180</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="como-funciona">
+    <div class="wrap">
+      <h2>Como o app vai funcionar</h2>
+      <p class="lead">Pensado para que ninguém perceba que ele está ali.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="num">1</div>
+          <h3>Fica oculto</h3>
+          <p>Sem ícone na tela inicial. Quem pega o seu celular não encontra o aplicativo.</p>
+        </div>
+        <div class="card">
+          <div class="num">2</div>
+          <h3>Botão de pânico</h3>
+          <p>Segure o botão de volume por 10 segundos, mesmo com o celular bloqueado, para disparar o alerta.</p>
+        </div>
+        <div class="card">
+          <div class="num">3</div>
+          <h3>Ajuda a caminho</h3>
+          <p>Sua localização é enviada para 5 contatos de confiança e para a viatura mais próxima, via COPOM.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="recursos">
+    <div class="wrap">
+      <h2>Recursos</h2>
+      <div class="grid">
+        <div class="card">
+          <span class="tag">Gratuito</span>
+          <h3>Contatos de emergência</h3>
+          <p>Cadastro de pessoas de confiança que recebem SMS com sua localização em tempo real.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Gratuito</span>
+          <h3>Histórico de alertas</h3>
+          <p>Registro de data, hora e local de cada acionamento, útil para medidas protetivas.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Premium</span>
+          <h3>Apoio psicológico</h3>
+          <p>Conversa com psicólogas parceiras especializadas em violência doméstica.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Segurança</span>
+          <h3>Privacidade em primeiro lugar</h3>
+          <p>Dados criptografados e tratamento conforme a LGPD.</p>
+        </div>
+      </div>
+      <p class="note">O aplicativo está em desenvolvimento. A integração com o COPOM depende de parceria com a Polícia Militar de cada estado.</p>
+    </div>
+  </section>
+
+  <section id="analise">
+    <div class="wrap">
+      <h2>Análise de risco do relacionamento</h2>
+      <p class="lead">Responda com sinceridade. Suas respostas ficam apenas neste aparelho e não são enviadas para lugar nenhum.</p>
+
+      <form id="quiz" novalidate></form>
+
+      <div class="progress" aria-hidden="true"><div id="barra"></div></div>
+      <div class="progress-label" id="progresso">0 de 10 respondidas</div>
+
+      <div class="actions">
+        <button class="btn btn-brand" id="ver" type="button" disabled>Ver resultado</button>
+        <button class="btn btn-ghost" id="limpar" type="button">Limpar respostas</button>
+      </div>
+
+      <div id="resultado" role="status" aria-live="polite"></div>
+
+      <p class="note">Questionário inspirado em estudos da OMS, CDC, ONU Mulheres, Instituto Maria da Penha e na obra <em>Why Does He Do That?</em>, de Lundy Bancroft. Não substitui avaliação profissional.</p>
+    </div>
+  </section>
+
+  <section id="ajuda">
+    <div class="wrap">
+      <h2>Precisa de ajuda agora?</h2>
+      <div class="helplines">
+        <a class="card helpline" href="tel:190">
+          <div class="num">190</div>
+          <h3>Polícia Militar</h3>
+          <p>Em perigo imediato.</p>
+        </a>
+        <a class="card helpline" href="tel:180">
+          <div class="num">180</div>
+          <h3>Central de Atendimento à Mulher</h3>
+          <p>Gratuito, 24 horas, orientação e denúncia.</p>
+        </a>
+        <a class="card helpline" href="tel:192">
+          <div class="num">192</div>
+          <h3>SAMU</h3>
+          <p>Atendimento médico de urgência.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    Help Mulher · SOS Mulher — Lei Maria da Penha (Lei nº 11.340/2006). Você não está sozinha.
+  </div>
+</footer>
+
+<script>
+  // Saída rápida: troca a página atual sem deixar rastro no botão "voltar"
+  function sairRapido() {
+    try { sessionStorage.clear(); } catch (e) {}
+    window.location.replace("https://www.google.com/search?q=previs%C3%A3o+do+tempo");
+  }
+  document.getElementById("sair").addEventListener("click", sairRapido);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") sairRapido(); });
+
+  var opcoes = { 1: "Nunca", 2: "Raro", 3: "Às vezes", 4: "Sempre" };
+  var perguntas = [
+    "Ele demonstra um senso de posse sobre suas decisões?",
+    "Ele tenta controlar o que você veste ou para onde vai?",
+    "Ele faz você duvidar da sua memória ou percepção?",
+    "Ele demonstra ciúme excessivo?",
+    "Ele monitora suas redes sociais ou mensagens?",
+    "Ele tenta isolar você de amigos ou família?",
+    "Há explosões de raiva seguidas de desculpas?",
+    "Ele pressiona você a fazer algo que não quer?",
+    "Ele pressiona por gravidez contra sua vontade?",
+    "Ele culpa você pelas reações agressivas dele?"
+  ];
+
+  var form = document.getElementById("quiz");
+  var btnVer = document.getElementById("ver");
+  var resultado = document.getElementById("resultado");
+
+  perguntas.forEach(function (p, i) {
+    var n = i + 1;
+    var html = '<div class="q"><fieldset><legend>' + n + ". " + p + '</legend><div class="opts">';
+    Object.keys(opcoes).forEach(function (v) {
+      html += '<label><input type="radio" name="q' + n + '" value="' + v + '"><span>' + opcoes[v] + "</span></label>";
+    });
+    html += "</div></fieldset></div>";
+    form.insertAdjacentHTML("beforeend", html);
+  });
+
+  function respostas() {
+    return perguntas.map(function (_, i) {
+      var el = form.querySelector('input[name="q' + (i + 1) + '"]:checked');
+      return el ? Number(el.value) : null;
+    });
+  }
+
+  function atualizar() {
+    var feitas = respostas().filter(function (v) { return v !== null; }).length;
+    document.getElementById("barra").style.width = (feitas / perguntas.length * 100) + "%";
+    document.getElementById("progresso").textContent = feitas + " de " + perguntas.length + " respondidas";
+    btnVer.disabled = feitas < perguntas.length;
+  }
+  form.addEventListener("change", atualizar);
+
+  btnVer.addEventListener("click", function () {
+    var total = respostas().reduce(function (a, b) { return a + b; }, 0);
+    var nivel, cor, texto;
+    if (total > 28) {
+      nivel = "ALTO"; cor = "var(--danger)";
+      texto = "Os comportamentos que você descreveu são sinais sérios de violência. Se estiver em perigo, ligue 190 agora. Para orientação e acolhimento, ligue 180.";
+    } else if (total > 18) {
+      nivel = "MODERADO"; cor = "var(--warn)";
+      texto = "Há sinais de controle e abuso que merecem atenção. Converse com alguém de confiança e procure orientação pelo 180.";
+    } else {
+      nivel = "BAIXO"; cor = "var(--ok)";
+      texto = "Poucos sinais de risco apareceram. Se algo mudar ou te deixar desconfortável, confie no seu instinto e busque apoio.";
+    }
+    resultado.style.display = "block";
+    resultado.style.background = cor;
+    resultado.innerHTML =
+      "<h3>Resultado: risco " + nivel + "</h3>" +
+      "<p>" + texto + "</p>" +
+      '<div class="actions" style="margin-top:0">' +
+      '<a class="btn" href="tel:180">📞 Ligar 180</a>' +
+      '<a class="btn" href="tel:190">🚨 Ligar 190</a></div>';
+    resultado.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  document.getElementById("limpar").addEventListener("click", function () {
+    form.reset();
+    resultado.style.display = "none";
+    atualizar();
+  });
+</script>
+</body>
+</html>
